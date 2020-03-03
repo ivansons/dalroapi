@@ -1,0 +1,16 @@
+***************
+*** 46,51 ****
+        }
+      }
+      catch (\LogicException $exception) {
+      }
+      $this->messageFactory = $message_factory;
+      $this->foundationFactory = $foundation_factory;
+--- 46,52 ----
+        }
+      }
+      catch (\LogicException $exception) {
++       trigger_error($exception, E_USER_WARNING);
+      }
+      $this->messageFactory = $message_factory;
+      $this->foundationFactory = $foundation_factory;

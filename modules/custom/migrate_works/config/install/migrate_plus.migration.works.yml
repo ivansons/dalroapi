@@ -1,0 +1,67 @@
+# Migration configuration for products.
+id: works_json
+label: JSON feed of works
+migration_group: works
+
+source:
+  plugin: url
+  data_fetcher_plugin: file
+  data_parser_plugin: json
+  # The URL of your JSON datasource
+     urls: 'public://migrate_works/works.json'
+  item_selector: works
+  works:
+    -
+      name: work_ids
+      label: 'Unique Work identifier'
+      selector: work_id
+    -
+      name: company_cd
+      label: 'Company Code'
+      selector: company_cd
+    -
+      name: ref_cd
+      label: 'Reference Code'
+      selector: ref_cd
+    -
+      name: rro_work_cd
+      label: 'Reproduction Rights Organisation work code'
+      selector: rro_work_cd
+    -
+      name: work_title
+      label: 'Work title'
+      selector: work_title
+     
+  ids:
+      work_id:
+        type: integer
+
+destination:
+  plugin: entity:node
+
+process:
+  type:
+    plugin: default_value
+    default_value: new_work
+
+  title: work_title
+  field_work_id: work_id
+  field_company_cd: ref_cd
+  field_rro_work_cd: rro_work_cd
+  company_cd: company_cd
+  
+
+  sticky:
+    plugin: default_value
+    default_value: 0
+  uid:
+    plugin: default_value
+    default_value: 0
+
+destination:
+  plugin: 'entity:node'
+migration_dependencies: {  }
+dependencies:
+  enforced:
+    module:
+      - migrate_works

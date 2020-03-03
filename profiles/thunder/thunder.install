@@ -1,0 +1,110 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the thunder installation profile.
+ */
+
+use Drupal\Component\Utility\NestedArray;
+use Drupal\update_helper\UpdateLogger;
+use Drupal\Core\Entity\EntityStorageException;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+
+/**
+ * Update hook dependencies.
+ *
+ * Ensure that Thunder updates come last so entity schema updates and more
+ * fundamental updates occur first.
+ *
+ * @return mixed
+ *   Returns list of update hook dependencies.
+ */
+function thunder_update_dependencies() {
+
+  $dependencies['thunder'] = [];
+
+  // Ensure that all thunder hook_update_N functions are called after all other
+  // update hooks.
+  $list = [];
+  $return = [];
+  $updates = update_get_update_list();
+
+  // List of thunder modules with hook_update_N() functions.
+  $thunder_module_list = [
+    'thunder',
+    'thunder_article',
+    'thunder_liveblog',
+    'thunder_media',
+    'thunder_paragraphs',
+    'thunder_taxonomy',
+  ];
+
+  foreach ($updates as $module => $info) {
+    if (in_array($module, $thunder_module_list, TRUE)) {
+      // Build a list of thunder modules with updates to run.
+      $return[$module] = [];
+    }
+    else {
+      // Build the list of all the update hooks for thunder updates to depend
+      // on.
+      $pending = array_keys($info['pending']);
+      $list[$module] = array_pop($pending);
+    }
+  }
+
+  // Add the dependencies to the thunder modules with updates to run.
+  foreach ($return as $module => &$info) {
+    $info[$updates[$module]['start']] = $list;
+  }
+
+  return NestedArray::mergeDeepArray([$return, $dependencies], TRUE);
+}
+
+/**
+ * Helper function for direct use of update helper checklist service.
+ *
+ * @param string $update_id
+ *   Identifier of update in checklist.
+ * @param bool $successful
+ *   The success or failure of update.
+ * @param \Drupal\update_helper\UpdateLogger $updateLogger
+ *   Used update logger service in update hook.
+ */
+function _thunder_mark_update_checklist($update_id, $successful, UpdateLogger $updateLogger) {
+  try {
+    /** @var \Drupal\update_helper_checklist\UpdateChecklist $update_checklist */
+    $update_checklist = \Drupal::service('update_helper_checklist.update_checklist');
+
+    if ($successful) {
+      $update_checklist->markUpdatesSuccessful(['thunder' => [$update_id]]);
+    }
+    else {
+      $update_checklist->markUpdatesFailed(['thunder' => [$update_id]]);
+    }
+  }
+  catch (EntityStorageException $ee) {
+    $updateLogger->warning(t('Unable to mark update in checklist.'));
+  }
+  catch (ServiceNotFoundException $se) {
+    // If service is not available, we will just ignore it.
+  }
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function thunder_requirements($phase) {
+  if ($phase !== 'update') {
+    return [];
+  }
+  $requirements = [];
+  $thunder_schema = drupal_get_installed_schema_version('thunder');
+  if ($thunder_schema > 8000 && $thunder_schema < 8138) {
+    $requirements['thunder'] = [
+      'title' => t('Thunder'),
+      'description' => t('You need to update to the latest version of Thunder 2 before switching to Thunder 3.'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+  }
+  return $requirements;
+}

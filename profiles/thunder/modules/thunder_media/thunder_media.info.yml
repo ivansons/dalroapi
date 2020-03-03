@@ -1,0 +1,14 @@
+name: 'Thunder Media'
+description: 'Provides media bundles for thunder.'
+type: module
+# core: 8.x
+dependencies:
+  - drupal:image
+package: Thunder
+configure: thunder_media.configuration_form
+
+# Information added by Drupal.org packaging script on 2019-08-08
+version: '8.x-3.0-rc1'
+core: '8.x'
+project: 'thunder'
+datestamp: 1565272217

@@ -1,0 +1,12 @@
+diff --git a/src/Server/ResourceServer.php b/src/Server/ResourceServer.php
+index decda71..f46e7a8 100644
+--- a/src/Server/ResourceServer.php
++++ b/src/Server/ResourceServer.php
+@@ -46,6 +46,7 @@ class ResourceServer implements ResourceServerInterface {
+       }
+     }
+     catch (\LogicException $exception) {
++      trigger_error($exception, E_USER_WARNING);
+     }
+     $this->messageFactory = $message_factory;
+     $this->foundationFactory = $foundation_factory;
